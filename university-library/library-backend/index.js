@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import cookieParser from 'cookie-parser';
-import './config/redis.js'; // Just importing it will trigger the connection
+
 import db from './config/db.js';
 import authRoutes from './routes/authroutes.js';
 import { errorMiddleware } from './middleware/errorMiddlewares.js';
