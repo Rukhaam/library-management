@@ -14,3 +14,17 @@ export const generateVerificationOtpEmailTemplate = (verificationCode) => {
       </div>
     `;
   };
+  export const generateForgotPasswordEmailTemplate = (resetPasswordUrl) => {
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 10px;">
+        <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
+        <p style="font-size: 16px; color: #555;">You are receiving this email because you requested a password reset for your Library Management System account.</p>
+        <p style="font-size: 16px; color: #555;">Please click on the button below to choose a new password:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetPasswordUrl}" style="font-size: 18px; color: #ffffff; background-color: #2563eb; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block;">Reset Password</a>
+        </div>
+        <p style="font-size: 14px; color: #777;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        <p style="font-size: 12px; color: #aaa; text-align: center;">This link is valid for exactly 15 minutes.</p>
+      </div>
+    `;
+};

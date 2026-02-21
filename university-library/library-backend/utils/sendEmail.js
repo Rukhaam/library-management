@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
 
 export const sendEmail = async (options) => {
+  console.log("Using Email:", process.env.SMTP_MAIL);
+    console.log("Password length:", process.env.SMTP_PASSWORD ? process.env.SMTP_PASSWORD.length : "UNDEFINED!");
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
