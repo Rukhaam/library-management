@@ -12,11 +12,14 @@ import {
     findUserByResetToken, 
     updatePassword 
 } from '../models/userModels.js';
-import { sendVerificationCode } from "../utils/sendVerificationCode.js"; // Ensure this matches your file structure
+import { sendVerificationCode } from "../utils/sendVerificationCode.js"; 
 import { sendToken } from "../utils/sendToken.js";
 import { sendEmail } from '../utils/sendEmail.js';
 import crypto from 'crypto';
 import cloudinary from '../config/cloudinary.js';
+
+// 👇 IMPORT YOUR NEW VALIDATORS
+import { isValidEmail, isValidPassword } from '../utils/validators.js';
 
 // 1. REGISTER USER
 export const registerUser = catchAsyncErrors(async (req, res, next) => {
@@ -24,6 +27,14 @@ export const registerUser = catchAsyncErrors(async (req, res, next) => {
 
   if (!name || !email || !password) {
     return next(new ErrorHandler("Please enter all fields", 400));
+  }
+
+  // 👇 Apply Email and Strict Password Validators
+  if (!isValidEmail(email)) {
+    return next(new ErrorHandler("Please enter a valid email address", 400));
+  }
+  if (!isValidPassword(password)) {
+    return next(new ErrorHandler("Password must be 8-16 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.", 400));
   }
 
   // Check if user already exists
@@ -79,12 +90,14 @@ export const registerUser = catchAsyncErrors(async (req, res, next) => {
 // 2. LOGIN USER
 export const loginUser = catchAsyncErrors(async (req, res, next) => {
   const { email, password } = req.body;
-  if (password.length < 8 || password.length > 16) {
-    return next(new ErrorHandler("Password must be between 8 and 16 characters", 400));
-  }
 
   if (!email || !password) {
     return next(new ErrorHandler("Please enter all fields", 400));
+  }
+
+  // Validate email format to fail fast
+  if (!isValidEmail(email)) {
+    return next(new ErrorHandler("Invalid email format", 400));
   }
 
   // Find user by email
@@ -139,7 +152,7 @@ export const loginUser = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
-//  VERIFY OTP
+// VERIFY OTP
 export const verifyOTP = catchAsyncErrors(async (req, res, next) => {
   const { email, otp } = req.body;
 
@@ -187,7 +200,8 @@ export const verifyOTP = catchAsyncErrors(async (req, res, next) => {
     res
   );
 });
-//logout
+
+// LOGOUT
 export const logoutUser = catchAsyncErrors(async (req, res, next) => {
   res
     .status(200)
@@ -200,6 +214,8 @@ export const logoutUser = catchAsyncErrors(async (req, res, next) => {
       message: "Logged out successfully",
     });
 });
+
+// GET USER PROFILE
 export const getUserProfile = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
@@ -212,13 +228,13 @@ export const getUserProfile = catchAsyncErrors(async (req, res, next) => {
     },
   });
 });
-//  FORGOT PASSWORD
+
+// FORGOT PASSWORD
 export const forgotPassword = catchAsyncErrors(async (req, res, next) => {
     const { email } = req.body;
 
     const user = await findUserByEmail(email);
     console.log(user);
-    
     
     // 1. Check if user exists
     if (!user) {
@@ -262,6 +278,7 @@ export const forgotPassword = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Email could not be sent. Please try again.", 500));
     }
 });
+
 // RESET PASSWORD
 export const resetPassword = catchAsyncErrors(async (req, res, next) => {
     const { token } = req.params;
@@ -272,12 +289,9 @@ export const resetPassword = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("Please enter and confirm your new password", 400));
     }
   
-    // 2. Check password length (between 8 and 16 characters)
-    if (password.length < 8 || password.length > 16) {
-      return next(new ErrorHandler("Password must be between 8 and 16 characters", 400));
-    }
-    if (confirmPassword.length < 8 || confirmPassword.length > 16) {
-      return next(new ErrorHandler("Password must be between 8 and 16 characters", 400));
+    // 👇 2. Apply Strict Password Validator
+    if (!isValidPassword(password)) {
+      return next(new ErrorHandler("Password must be 8-16 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.", 400));
     }
   
     // 3. Check if passwords match
@@ -311,6 +325,7 @@ export const resetPassword = catchAsyncErrors(async (req, res, next) => {
       res
     );
   });
+
 // UPDATE PASSWORD (When already logged in)
 export const updatePasswordLoggedIn = catchAsyncErrors(
   async (req, res, next) => {
@@ -320,11 +335,9 @@ export const updatePasswordLoggedIn = catchAsyncErrors(
       return next(new ErrorHandler("Please provide all required fields", 400));
     }
 
-if(newPassword.length < 8 || newPassword.length > 16){ 
-  return next(new ErrorHandler("New password must be between 8 and 16 characters", 400));
-}
-    if(confirmPassword.length < 8 || confirmPassword.length > 16){
-        return next(new ErrorHandler("Password must be between 8 and 16 characters", 400));
+    // 👇 Apply Strict Password Validator
+    if (!isValidPassword(newPassword)) { 
+      return next(new ErrorHandler("New password must be 8-16 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.", 400));
     }
 
     if (newPassword !== confirmPassword) {

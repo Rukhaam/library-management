@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchAllBooks, resetBookSlice } from "@/store/slices/bookSlice";
+import { fetchAllBooks, resetBookSlice ,deleteBook} from "@/store/slices/bookSlice";
 import { fetchAllBorrowedBooks, resetBorrowSlice } from "@/store/slices/borrowSlice";
 import {
   toggleAddBookPopup,
@@ -14,9 +14,10 @@ import Header from "../../layout/Header";
 import AddBookPopup from "../../popups/AddBookPopup";
 import ReadBookPopup from "../../popups/ReadBookPopup";
 import RecordBookPopup from "../../popups/RecordBookPopup";
-
+import { toggleDeleteBookPopup } from "@/store/slices/popupSlice";
+import DeleteBookPopup from "@/popups/deleteBookPopup";
 // Icons
-import { BookOpen, NotebookPen } from "lucide-react"; 
+import { BookOpen, NotebookPen ,Trash2} from "lucide-react"; 
 
 const BookManagement = () => {
   const dispatch = useDispatch();
@@ -31,7 +32,12 @@ const BookManagement = () => {
     error: bookError,
     message: bookMessage,
   } = useSelector((state) => state.book);
-
+  const handleDeleteBook = (id) => {
+    // Built-in browser confirmation popup
+    if (window.confirm("Are you sure you want to delete this book? This action cannot be undone.")) {
+      dispatch(deleteBook(id));
+    }
+  };
   // 3. Grab Borrow State
   const {
     loading: borrowSliceLoading,
@@ -40,7 +46,7 @@ const BookManagement = () => {
   } = useSelector((state) => state.borrow);
 
   // 4. Grab Popup States
-  const { addBookPopup, readBookPopup, recordBookPopup } = useSelector(
+  const { addBookPopup, readBookPopup, recordBookPopup,deleteBookPopup } = useSelector(
     (state) => state.popup
   );
 
@@ -203,15 +209,26 @@ const BookManagement = () => {
                         <BookOpen size={20} />
                       </button>
 
-                      {/* Record Book Icon (Admin Only) */}
+                      {/* Admin-Only Actions */}
                       {isAuthenticated && user?.role === "admin" && (
-                        <button
-                          onClick={() => openRecordBookPopup(book._id || book.id)}
-                          className="text-gray-800 hover:text-black transition"
-                          title="Record Borrow"
-                        >
-                          <NotebookPen size={20} />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => openRecordBookPopup(book._id || book.id)}
+                            className="text-gray-800 hover:text-black transition"
+                            title="Record Borrow"
+                          >
+                            <NotebookPen size={20} />
+                          </button>
+                          
+                          {/* NEW DELETE BUTTON */}
+                          <button
+                            onClick={() => dispatch(toggleDeleteBookPopup(book._id || book.id))}
+                            className="text-red-500 hover:text-red-700 transition"
+                            title="Delete Book"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>
@@ -257,6 +274,7 @@ const BookManagement = () => {
       {addBookPopup && <AddBookPopup />}
       {readBookPopup && <ReadBookPopup readBook={readBook} />}           
       {recordBookPopup && <RecordBookPopup borrowBookId={borrowBookId} />}
+      {deleteBookPopup && <DeleteBookPopup />}
     </main>
   );
 };

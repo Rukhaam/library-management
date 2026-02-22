@@ -6,7 +6,7 @@ import {
     returnBookModel 
 } from '../models/borrowModels.js'; 
 import { getBookByIdModel } from '../models/bookModels.js'; 
-import { findUserByEmail } from '../models/userModels.js'; // ✅ CORRECT IMPORT
+import { findUserByEmail } from '../models/userModels.js'; 
 import { catchAsyncErrors } from '../middleware/catchAsyncErrors.js';
 import { ErrorHandler } from '../middleware/errorMiddlewares.js';
 import { calculateFine } from '../utils/fineCalculator.js';
@@ -17,8 +17,6 @@ export const borrowBook = catchAsyncErrors(async (req, res, next) => {
     const { email } = req.body; // Grab email if sent by Admin via Record Popup
 
     let userId = req.user.id;
-
-    // ✅ If an email is provided in the request body, find that user!
     if (email) {
         const targetUser = await findUserByEmail(email);
         if (!targetUser) {
@@ -115,3 +113,34 @@ export const returnBorrowedBooks = catchAsyncErrors(async (req, res, next) => {
         fine: fine > 0 ? `Late fee of $${fine} applied.` : "No fine applied."
     });
 });
+// DELETE BOOK
+export const deleteBook = catchAsyncErrors(async (req, res, next) => {
+    const { id } = req.params;
+  
+    // 1. Check if the book exists
+    const [book] = await db.query("SELECT * FROM books WHERE id = ?", [id]);
+    if (book.length === 0) {
+      return next(new ErrorHandler("Book not found", 404));
+    }
+  
+    // 2. Check if the book is currently borrowed (return_date is NULL)
+    const [activeBorrows] = await db.query(
+      "SELECT * FROM borrow_records WHERE book_id = ? AND return_date IS NULL",
+      [id]
+    );
+  
+    if (activeBorrows.length > 0) {
+      return next(new ErrorHandler("Cannot delete this book because it is currently borrowed by a student.", 400));
+    }
+  
+    // 3. Clear past borrow history to prevent MySQL Foreign Key constraint errors
+    await db.query("DELETE FROM borrow_records WHERE book_id = ?", [id]);
+  
+    // 4. Delete the actual book
+    await db.query("DELETE FROM books WHERE id = ?", [id]);
+  
+    res.status(200).json({
+      success: true,
+      message: "Book deleted successfully!",
+    });
+  });

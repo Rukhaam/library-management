@@ -9,6 +9,8 @@ const popupSlice = createSlice({
     recordBookPopup: false,
     returnBookPopup: false,
     addNewAdminPopup: false,
+    deleteBookPopup: false,
+    bookToDelete: null,
   },
   reducers: {
     // Toggles for each specific popup
@@ -29,6 +31,11 @@ const popupSlice = createSlice({
     },
     toggleAddNewAdminPopup: (state) => {
       state.addNewAdminPopup = !state.addNewAdminPopup;
+    },
+    toggleDeleteBookPopup: (state, action) => {
+      state.deleteBookPopup = !state.deleteBookPopup;
+      // Capture the ID if it's passed in, otherwise reset to null
+      state.bookToDelete = action.payload || null; 
     },
     
     // Utility to easily close everything at once (e.g., on page navigation)
@@ -51,6 +58,7 @@ export const {
   toggleRecordBookPopup,
   toggleReturnBookPopup,
   toggleAddNewAdminPopup,
+  toggleDeleteBookPopup,
   closeAllPopups,
 } = popupSlice.actions;
 
