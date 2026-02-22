@@ -73,7 +73,8 @@ export const updatePassword = async (userId, hashedPassword) => {
 };
 export const getAllUsersModel = async () => {
   const [rows] = await db.query(
-      'SELECT id, name, email, phone, role, avatar_url, created_at FROM users ORDER BY created_at DESC'
+      // Look at the AS createdAt part below 👇
+      'SELECT id, name, email, phone, role, avatar_url, created_at AS createdAt FROM users ORDER BY created_at DESC'
   );
   return rows;
 };
@@ -94,3 +95,10 @@ export const registerAdminModel = async (adminData) => {
   );
   return result.insertId;
 };
+export const promoteUserToAdminModel = async (userId) => {
+  const [result] = await db.query(
+    "UPDATE users SET role = 'admin' WHERE id = ?",
+    [userId]
+  );
+  return result;
+}

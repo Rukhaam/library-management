@@ -4,7 +4,7 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 export const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 30 minutes
-    max: 5, 
+    max: 100, 
     message: {
         success: false,
         message: "Too many registration attempts from this IP, please try again after 30 minutes."

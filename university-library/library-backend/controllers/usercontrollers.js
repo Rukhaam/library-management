@@ -3,7 +3,8 @@ import cloudinary from '../config/cloudinary.js';
 import { 
     getAllUsersModel, 
     checkEmailExists, 
-    registerAdminModel 
+    registerAdminModel ,
+    promoteUserToAdminModel
 } from '../models/userModels.js'; 
 import { catchAsyncErrors } from '../middleware/catchAsyncErrors.js';
 import { ErrorHandler } from '../middleware/errorMiddlewares.js';
@@ -18,6 +19,15 @@ export const getAllUsers = catchAsyncErrors(async (req, res, next) => {
         users
     });
 });
+export const promoteUserToAdmin = async (req, res) => {
+    try {
+      const { id } = req.params;
+      await promoteUserToAdminModel(id);
+      res.status(200).json({ message: "User promoted to Admin successfully!" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to promote user." });
+    }
+  };
 
 // 2. REGISTER NEW ADMIN
 // 2. REGISTER NEW ADMIN

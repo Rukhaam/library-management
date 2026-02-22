@@ -316,9 +316,10 @@ export const updatePasswordLoggedIn = catchAsyncErrors(
     if (!oldPassword || !newPassword || !confirmPassword) {
       return next(new ErrorHandler("Please provide all required fields", 400));
     }
-    if(password.length < 8 || password.length > 16){
-        return next(new ErrorHandler("Password must be between 8 and 16 characters", 400));
-    }
+  // ✅ Corrected Backend Controller Validation
+if(newPassword.length < 8 || newPassword.length > 16){ 
+  return next(new ErrorHandler("New password must be between 8 and 16 characters", 400));
+}
     if(confirmPassword.length < 8 || confirmPassword.length > 16){
         return next(new ErrorHandler("Password must be between 8 and 16 characters", 400));
     }
