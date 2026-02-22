@@ -20,13 +20,11 @@ const borrowSlice = createSlice({
     },
     fetchMyBorrowedSuccess(state, action) {
       state.loading = false;
-      // ✅ Safely fallback to action.payload if .borrowedBooks doesn't exist
-      state.myBorrowedBooks = action.payload.borrowedBooks || action.payload || [];
+      state.myBorrowedBooks = action.payload.books || [];
     },
     fetchAllBorrowedSuccess(state, action) {
       state.loading = false;
-      // ✅ Safely fallback to action.payload if .borrowedBooks doesn't exist
-      state.allBorrowedBooks = action.payload.borrowedBooks || action.payload || [];
+      state.allBorrowedBooks = action.payload.records || [];
     },
     fetchBorrowedFailed(state, action) {
       state.loading = false;
@@ -88,6 +86,7 @@ export const {
   returnBookRequest,
   returnBookSuccess,
   returnBookFailed,
+  
   resetBorrowSlice: resetBorrowSliceAction,
 } = borrowSlice.actions;
 
@@ -146,12 +145,16 @@ export const borrowBook = ({ bookId, email }) => async (dispatch) => {
     }
   };
 // 4. Return a Book
-export const returnBook = (borrowId) => async (dispatch) => {
+// 4. Return a Book
+export const returnBook = ({ bookId, email }) => async (dispatch) => {
   try {
     dispatch(returnBookRequest());
-    const res = await axios.put(`http://localhost:5000/api/borrow/return/${borrowId}`, {}, {
+    
+    // ✅ Notice we are now passing { email } as the request body
+    const res = await axios.put(`http://localhost:5000/api/borrow/return/${bookId}`, { email }, {
       withCredentials: true,
     });
+    
     dispatch(returnBookSuccess(res.data));
     dispatch(fetchMyBorrowedBooks()); // Refresh their list
     dispatch(fetchAllBorrowedBooks()); // Refresh catalog for admins

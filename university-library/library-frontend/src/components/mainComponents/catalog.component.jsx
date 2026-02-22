@@ -10,7 +10,6 @@ const Catalog = () => {
   const dispatch = useDispatch();
 
   // 1. Grab State from Redux
-  // Make sure your store.js has 'borrow: borrowReducer' for this to work!
   const { allBorrowedBooks, loading } = useSelector((state) => state.borrow);
   const { returnBookPopup } = useSelector((state) => state.popup);
 
@@ -19,16 +18,17 @@ const Catalog = () => {
   const [returnBookId, setReturnBookId] = useState("");
   const [borrowerEmail, setBorrowerEmail] = useState("");
 
-  // ==========================================
-  // THE FIX: FETCH THE BOOKS ON MOUNT
-  // ==========================================
+  // PAGINATION STATE
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Fetch on mount
   useEffect(() => {
-    // This guarantees the backend is called every time you open the Catalog
     dispatch(fetchAllBorrowedBooks());
   }, [dispatch]);
 
   // ==========================================
-  // INSTRUCTOR'S CUSTOM DATE FORMATTERS
+  // CUSTOM DATE FORMATTERS
   // ==========================================
   const formatDateAndTime = (timestamp) => {
     if (!timestamp) return "N/A";
@@ -50,38 +50,34 @@ const Catalog = () => {
     ).padStart(2, "0")}-${date.getFullYear()}`;
   };
 
-  // ==========================================
-  // INSTRUCTOR'S FILTER LOGIC
-  // ==========================================
-  const currentDate = new Date();
-
-  // 1. Active Borrows (Not returned AND Due Date is in the future)
   // ==========================
   // FILTER LOGIC
   // ==========================
+  const currentDate = new Date();
 
-  // 🚨 THE BULLETPROOF FIX: 
-  // If it's already an array, use it. If it's an object, dig into common backend keys to find the array.
   const safeBooks = Array.isArray(allBorrowedBooks) 
     ? allBorrowedBooks 
-    : allBorrowedBooks?.data || allBorrowedBooks?.borrowedBooks || allBorrowedBooks?.results || [];
+    : allBorrowedBooks?.records || allBorrowedBooks?.borrowedBooks || allBorrowedBooks?.data || [];
 
-  // 1. Active Borrows (Not returned AND Due Date is in the future)
   const borrowedBooks = safeBooks.filter((item) => {
     const isNotReturned = !item.returned && !item.return_date;
     const dueDate = new Date(item.due_date);
     return isNotReturned && dueDate >= currentDate;
   });
 
-  // 2. Overdue Books (Not returned AND Due Date is in the past)
   const overdueBooks = safeBooks.filter((item) => {
     const isNotReturned = !item.returned && !item.return_date;
     const dueDate = new Date(item.due_date);
     return isNotReturned && dueDate < currentDate;
   });
 
-  // Determine which array to map over based on the active tab
   const booksToDisplay = filter === "Borrowed" ? borrowedBooks : overdueBooks;
+
+  // PAGINATION MATH
+  const totalPages = Math.ceil(booksToDisplay.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCatalogItems = booksToDisplay.slice(indexOfFirstItem, indexOfLastItem);
 
   // ==========================================
   // HANDLERS
@@ -110,10 +106,10 @@ const Catalog = () => {
           </div>
         </div>
 
-        {/* Toggle Buttons (Matching the video styling) */}
+        {/* Toggle Buttons */}
         <div className="flex items-center mb-6 shadow-sm w-fit rounded-lg">
           <button
-            onClick={() => setFilter("Borrowed")}
+            onClick={() => { setFilter("Borrowed"); setCurrentPage(1); }}
             className={`px-6 py-2.5 text-sm font-bold border-2 transition-colors rounded-l-lg ${
               filter === "Borrowed"
                 ? "bg-black text-white border-black"
@@ -123,7 +119,7 @@ const Catalog = () => {
             Active Borrows
           </button>
           <button
-            onClick={() => setFilter("Overdue")}
+            onClick={() => { setFilter("Overdue"); setCurrentPage(1); }}
             className={`px-6 py-2.5 text-sm font-bold border-2 border-l-0 transition-colors rounded-r-lg ${
               filter === "Overdue"
                 ? "bg-red-500 text-white border-red-500"
@@ -142,7 +138,7 @@ const Catalog = () => {
             </p>
           </div>
         ) : booksToDisplay.length > 0 ? (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left border-collapse whitespace-nowrap">
                 <thead>
@@ -156,7 +152,7 @@ const Catalog = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {booksToDisplay.map((item, index) => (
+                  {currentCatalogItems.map((item, index) => (
                     <tr
                       key={item.id || item._id || index}
                       className={`text-gray-600 transition-colors hover:bg-gray-50 ${
@@ -164,20 +160,20 @@ const Catalog = () => {
                       }`}
                     >
                       <td className="py-4 px-6 font-semibold text-gray-800">
-                        {index + 1}
+                        {indexOfFirstItem + index + 1}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex flex-col">
                           <span className="font-bold text-gray-800 text-sm">
-                            {item.user?.name || "Unknown User"}
+                            {item.user_name || "Unknown User"}
                           </span>
                           <span className="text-xs text-gray-500">
-                            {item.user?.email || item.email}
+                            {item.user_email || item.email}
                           </span>
                         </div>
                       </td>
                       <td className="py-4 px-6 font-medium text-black">
-                        {item.book?.title || item.title || "Unknown Book"}
+                        {item.book_title || item.title || "Unknown Book"}
                       </td>
                       <td className="py-4 px-6 text-sm">
                         {formatDateAndTime(item.borrow_date || item.createdAt)}
@@ -197,8 +193,8 @@ const Catalog = () => {
                           <button
                             onClick={() =>
                               openReturnPopup(
-                                item.id || item._id,
-                                item.user?.email || item.email
+                                item.book_id || item.id,
+                                item.user_email || item.email
                               )
                             }
                             className="p-2 bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white rounded-lg transition-colors inline-flex justify-center items-center"
@@ -213,9 +209,33 @@ const Catalog = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* PAGINATION CONTROLS */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center p-4 bg-white border-t border-gray-200">
+                <span className="text-sm text-gray-500">
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, booksToDisplay.length)} of {booksToDisplay.length} entries
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm font-medium border rounded-md disabled:opacity-50 hover:bg-gray-50 transition"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 text-sm font-medium border rounded-md disabled:opacity-50 hover:bg-gray-50 transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          /* Empty State */
           <div className="bg-white rounded-xl shadow-md border border-gray-100 p-16 text-center flex flex-col items-center mt-6">
             <div className="bg-gray-100 p-4 rounded-full mb-4 text-gray-400">
               <Library size={48} />
@@ -232,7 +252,6 @@ const Catalog = () => {
         )}
       </div>
 
-      {/* RENDER POPUP HERE */}
       {returnBookPopup && (
         <ReturnBookPopup
           returnBookId={returnBookId}

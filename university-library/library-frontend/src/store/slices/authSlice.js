@@ -138,6 +138,19 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
+    updateAvatarRequest(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    updateAvatarSuccess(state, action) {
+      state.loading = false;
+      state.message = action.payload.message;
+      state.user = action.payload.user; // Instantly updates the UI with the new avatar!
+    },
+    updateAvatarFailed(state, action) {
+      state.loading = false;
+      state.error = action.payload;
+    },
     resetAuthSlice(state) {
       state.error = null;
       state.loading = false;
@@ -157,6 +170,7 @@ export const {
   forgotPasswordRequest, forgotPasswordSuccess, forgotPasswordFailed,
   resetPasswordRequest, resetPasswordSuccess, resetPasswordFailed,
   updatePasswordRequest, updatePasswordSuccess, updatePasswordFailed,
+  updateAvatarRequest, updateAvatarSuccess, updateAvatarFailed,
   resetAuthSlice: resetAuthSliceAction
 } = authSlice.actions;
 
@@ -272,5 +286,17 @@ export const updatePassword = (data) => async (dispatch) => {
     dispatch(updatePasswordSuccess(res.data.message));
   } catch (err) {
     dispatch(updatePasswordFailed(err.response?.data?.message || "Update Failed"));
+  }
+};
+export const updateAvatar = (avatar) => async (dispatch) => {
+  try {
+    dispatch(updateAvatarRequest());
+    const res = await axios.put("http://localhost:5000/api/auth/avatar/update", { avatar }, {
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+    });
+    dispatch(updateAvatarSuccess(res.data));
+  } catch (err) {
+    dispatch(updateAvatarFailed(err.response?.data?.message || "Avatar update failed"));
   }
 };

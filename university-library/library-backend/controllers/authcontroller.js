@@ -16,6 +16,7 @@ import { sendVerificationCode } from "../utils/sendVerificationCode.js"; // Ensu
 import { sendToken } from "../utils/sendToken.js";
 import { sendEmail } from '../utils/sendEmail.js';
 import crypto from 'crypto';
+import cloudinary from '../config/cloudinary.js';
 
 // 1. REGISTER USER
 export const registerUser = catchAsyncErrors(async (req, res, next) => {
@@ -133,6 +134,7 @@ export const loginUser = catchAsyncErrors(async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar_url: user.avatar_url,
       },
     });
 });
@@ -206,6 +208,7 @@ export const getUserProfile = catchAsyncErrors(async (req, res, next) => {
       name: req.user.name,
       email: req.user.email,
       role: req.user.role,
+      avatar_url: req.user.avatar_url,
     },
   });
 });
@@ -316,7 +319,7 @@ export const updatePasswordLoggedIn = catchAsyncErrors(
     if (!oldPassword || !newPassword || !confirmPassword) {
       return next(new ErrorHandler("Please provide all required fields", 400));
     }
-  // ✅ Corrected Backend Controller Validation
+
 if(newPassword.length < 8 || newPassword.length > 16){ 
   return next(new ErrorHandler("New password must be between 8 and 16 characters", 400));
 }
@@ -349,3 +352,37 @@ if(newPassword.length < 8 || newPassword.length > 16){
     sendToken(user, 200, "Password updated successfully!", res);
   }
 );
+
+// UPDATE USER AVATAR
+export const updateAvatar = catchAsyncErrors(async (req, res, next) => {
+  const { avatar } = req.body;
+
+  if (!avatar) {
+    return next(new ErrorHandler("Please select an image to upload", 400));
+  }
+
+  // 1. Upload the Base64 image to Cloudinary
+  const result = await cloudinary.uploader.upload(avatar, {
+    folder: 'library_avatars',
+    width: 200,
+    crop: "scale"
+  });
+
+  // 2. Update the user's avatar_url in MySQL
+  await db.query(
+    "UPDATE users SET avatar_url = ? WHERE id = ?",
+    [result.secure_url, req.user.id]
+  );
+
+  // 3. Fetch the updated user data to send back to React
+  const [rows] = await db.query(
+    "SELECT id, name, email, role, avatar_url FROM users WHERE id = ?",
+    [req.user.id]
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Avatar updated successfully!",
+    user: rows[0] // Sends back the fresh user object
+  });
+});

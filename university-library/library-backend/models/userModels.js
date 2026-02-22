@@ -73,8 +73,19 @@ export const updatePassword = async (userId, hashedPassword) => {
 };
 export const getAllUsersModel = async () => {
   const [rows] = await db.query(
-      // Look at the AS createdAt part below 👇
-      'SELECT id, name, email, phone, role, avatar_url, created_at AS createdAt FROM users ORDER BY created_at DESC'
+      `SELECT 
+          u.id, 
+          u.name, 
+          u.email, 
+          u.phone, 
+          u.role, 
+          u.avatar_url, 
+          u.created_at AS createdAt,
+          COUNT(br.id) AS borrowedBooksCount 
+       FROM users u 
+       LEFT JOIN borrow_records br ON u.id = br.user_id AND br.return_date IS NULL 
+       GROUP BY u.id 
+       ORDER BY u.created_at DESC`
   );
   return rows;
 };

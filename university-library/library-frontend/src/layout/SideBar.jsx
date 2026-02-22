@@ -95,7 +95,12 @@ const SideBar = ({
         {user && (
           <div className="p-4 flex flex-col items-center border-b border-border">
             <img
-              src={user.avatar?.url || "/placeholder-avatar.png"}
+              // 👇 It will check for direct MySQL string, OR a nested object, OR fallback
+              src={
+                user?.avatar_url ||
+                user?.avatar?.url ||
+                "/placeholder-avatar.png"
+              }
               alt="User Avatar"
               className="w-16 h-16 rounded-full object-cover border-2 border-brand-primary shadow-glow mb-2"
             />
@@ -114,73 +119,73 @@ const SideBar = ({
           {/* 👑 ADMIN VIEW */}
           {/* ==================================== */}
           {isAuthenticated && user?.role === "admin" && (
-          <>
-            <button
-              className={getLinkClasses("Dashboard")}
-              onClick={() => {
-                setSelectedComponent("Dashboard");
-                setIsSideBarOpen(false);
-              }}
-            >
-              <LayoutDashboard size={22} />
-              <span>Dashboard</span>
-            </button>
+            <>
+              <button
+                className={getLinkClasses("Dashboard")}
+                onClick={() => {
+                  setSelectedComponent("Dashboard");
+                  setIsSideBarOpen(false);
+                }}
+              >
+                <LayoutDashboard size={22} />
+                <span>Dashboard</span>
+              </button>
 
-            <button
-              className={getLinkClasses("Books")}
-              onClick={() => {
-                setSelectedComponent("Books");
-                setIsSideBarOpen(false);
-              }}
-            >
-              <BookOpen size={22} />
-              <span>Books</span>
-            </button>
+              <button
+                className={getLinkClasses("Books")}
+                onClick={() => {
+                  setSelectedComponent("Books");
+                  setIsSideBarOpen(false);
+                }}
+              >
+                <BookOpen size={22} />
+                <span>Books</span>
+              </button>
 
-            <button
-              className={getLinkClasses("Catalog")}
-              onClick={() => {
-                setSelectedComponent("Catalog");
-                setIsSideBarOpen(false);
-              }}
-            >
-              <BookText size={22} />
-              <span>Catalog</span>
-            </button>
+              <button
+                className={getLinkClasses("Catalog")}
+                onClick={() => {
+                  setSelectedComponent("Catalog");
+                  setIsSideBarOpen(false);
+                }}
+              >
+                <BookText size={22} />
+                <span>Catalog</span>
+              </button>
 
-            <button
-              className={getLinkClasses("Users")}
-              onClick={() => {
-                setSelectedComponent("Users");
-                setIsSideBarOpen(false);
-              }}
-            >
-              <Users size={22} />
-              <span>Users</span>
-            </button>
+              <button
+                className={getLinkClasses("Users")}
+                onClick={() => {
+                  setSelectedComponent("Users");
+                  setIsSideBarOpen(false);
+                }}
+              >
+                <Users size={22} />
+                <span>Users</span>
+              </button>
 
-            <button
-              className={popupClasses}
-              onClick={() => {
-                dispatch(toggleAddNewAdminPopup());
-                setIsSideBarOpen(false);
-              }}
-            >
-              <UserPlus size={22} />
-              <span>Add New Admin</span>
-            </button>
+              <button
+                className={popupClasses}
+                onClick={() => {
+                  dispatch(toggleAddNewAdminPopup());
+                  setIsSideBarOpen(false);
+                }}
+              >
+                <UserPlus size={22} />
+                <span>Add New Admin</span>
+              </button>
 
-            <button
-              className={popupClasses}
-              onClick={() => {
-                dispatch(toggleSettingPopup());
-                setIsSideBarOpen(false);
-              }}
-            >
-              <Settings size={22} />
-              <span>Update Connection</span>
-            </button>
-          </>
+              <button
+                className={popupClasses}
+                onClick={() => {
+                  dispatch(toggleSettingPopup());
+                  setIsSideBarOpen(false);
+                }}
+              >
+                <Settings size={22} />
+                <span>Update Connection</span>
+              </button>
+            </>
           )}
 
           {/* ==================================== */}

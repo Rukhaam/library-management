@@ -8,18 +8,20 @@ export const checkActiveBorrow = async (userId, bookId) => {
 };
 
 // 2. Get active borrows for a specific user (For "My Books" page)
+// 2. Get active borrows for a specific user (For "My Books" page)
 export const getUserActiveBorrowsModel = async (userId) => {
     const [rows] = await db.query(
-        'SELECT b.title, b.author, br.* FROM borrow_records br JOIN books b ON br.book_id = b.id WHERE br.user_id = ? AND br.return_date IS NULL',
+        // 👇 Removed "AND br.return_date IS NULL" and added "b.description" so the popup works!
+        'SELECT b.title, b.author, b.description, br.* FROM borrow_records br JOIN books b ON br.book_id = b.id WHERE br.user_id = ? ORDER BY br.borrow_date DESC',
         [userId]
     );
     return rows;
 };
 
-// 3. Get ALL borrow records (For Admin)
+
 export const getAllBorrowRecordsModel = async () => {
     const [rows] = await db.query(
-        'SELECT u.name as user_name, b.title as book_title, br.* FROM borrow_records br JOIN users u ON br.user_id = u.id JOIN books b ON br.book_id = b.id ORDER BY br.borrow_date DESC'
+        'SELECT u.name as user_name, u.email as user_email, b.title as book_title, br.* FROM borrow_records br JOIN users u ON br.user_id = u.id JOIN books b ON br.book_id = b.id ORDER BY br.borrow_date DESC'
     );
     return rows;
 };

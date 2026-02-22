@@ -4,15 +4,28 @@ import {
     getUserActiveBorrowsModel, 
     getAllBorrowRecordsModel, 
     returnBookModel 
-} from '../models/borrowModels.js'; // Added the missing 3 imports
+} from '../models/borrowModels.js'; 
 import { getBookByIdModel } from '../models/bookModels.js'; 
+import { findUserByEmail } from '../models/userModels.js'; // ✅ CORRECT IMPORT
 import { catchAsyncErrors } from '../middleware/catchAsyncErrors.js';
 import { ErrorHandler } from '../middleware/errorMiddlewares.js';
 import { calculateFine } from '../utils/fineCalculator.js';
-// 1. BORROW A BOOK
+
+// 1. BORROW A BOOK (Works for Users AND Admins recording for users)
 export const borrowBook = catchAsyncErrors(async (req, res, next) => {
     const { bookId } = req.params;
-    const userId = req.user.id; 
+    const { email } = req.body; // Grab email if sent by Admin via Record Popup
+
+    let userId = req.user.id;
+
+    // ✅ If an email is provided in the request body, find that user!
+    if (email) {
+        const targetUser = await findUserByEmail(email);
+        if (!targetUser) {
+            return next(new ErrorHandler("User with this email not found", 404));
+        }
+        userId = targetUser.id; // Use the student's ID instead of Admin's
+    }
 
     // 1. Check if the book exists
     const book = await getBookByIdModel(bookId);
@@ -28,7 +41,7 @@ export const borrowBook = catchAsyncErrors(async (req, res, next) => {
     // 3. Check if the user is ALREADY borrowing this exact book
     const alreadyBorrowed = await checkActiveBorrow(userId, bookId);
     if (alreadyBorrowed) {
-        return next(new ErrorHandler("You have already borrowed this book. Please return it first.", 400));
+        return next(new ErrorHandler("This user has already borrowed this book.", 400));
     }
 
     // 4. Calculate the due date (14 days from right now)
@@ -39,9 +52,11 @@ export const borrowBook = catchAsyncErrors(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: `You have successfully borrowed '${book.title}'. It is due back on ${dueDate.toDateString()}.`
+        message: `Successfully recorded borrow for '${book.title}'. Due back on ${dueDate.toDateString()}.`
     });
 });
+
+// GET MY BORROWED BOOKS (Standard User)
 export const getMyBorrowedBooks = catchAsyncErrors(async (req, res, next) => {
     const books = await getUserActiveBorrowsModel(req.user.id);
 
@@ -64,26 +79,39 @@ export const getBorrowedBooksForAdmin = catchAsyncErrors(async (req, res, next) 
 });
 
 
+
+
+
 // 3. RETURN A BOOK
 export const returnBorrowedBooks = catchAsyncErrors(async (req, res, next) => {
     const { bookId } = req.params;
-    const userId = req.user.id;
+    const { email } = req.body; // Grab the student's email sent from the popup
 
-    // Check if the user actually has this book borrowed
+    let userId = req.user.id; // Default to whoever is logged in
+
+    // ✅ If Admin provides an email, look up the student's ID!
+    if (email) {
+        const targetUser = await findUserByEmail(email);
+        if (!targetUser) {
+            return next(new ErrorHandler("User with this email not found", 404));
+        }
+        userId = targetUser.id;
+    }
+
+    // Now it properly checks if the STUDENT has the book borrowed
     const record = await checkActiveBorrow(userId, bookId);
     if (!record) {
         return next(new ErrorHandler("You do not have an active borrow record for this book", 404));
     }
 
     const book = await getBookByIdModel(bookId);
-
-    const fine = calculateFine(record.due_date); // Defaults to 5 per day!
+    const fine = calculateFine(record.due_date); 
 
     await returnBookModel(record.id, bookId, book.quantity, fine);
 
     res.status(200).json({
         success: true,
         message: "Book returned successfully",
-        fine: fine > 0 ? `Late fee of ${fine} applied.` : "No fine applied."
+        fine: fine > 0 ? `Late fee of $${fine} applied.` : "No fine applied."
     });
 });

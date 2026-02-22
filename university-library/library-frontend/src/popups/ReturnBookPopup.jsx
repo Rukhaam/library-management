@@ -11,11 +11,10 @@ const ReturnBookPopup = ({ returnBookId, borrowerEmail }) => {
   const handleReturnBook = (e) => {
     e.preventDefault();
     
-    // Dispatch the return thunk (assuming it takes the borrow ID or book ID)
-    dispatch(returnBook(returnBookId));
+    // ✅ Dispatch both the bookId and the email
+    dispatch(returnBook({ bookId: returnBookId, email: borrowerEmail }));
     dispatch(toggleReturnBookPopup());
   };
-
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
