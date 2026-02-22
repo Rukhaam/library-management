@@ -1,8 +1,9 @@
 import { createBookModel, getAllBooksModel ,deleteBookModel,updateBookModel,getBookByIdModel } from '../models/bookModels.js';
 import { catchAsyncErrors } from '../middleware/catchAsyncErrors.js';
 import { ErrorHandler } from '../middleware/errorMiddlewares.js';
+import db from '../config/db.js';
 
-// 1. CREATE NEW BOOK (Admin only later, but open for testing now)
+// 1. ADD NEW BOOK
 export const createBook = catchAsyncErrors(async (req, res, next) => {
     const { title, author, description, price, quantity } = req.body|| {};
 
@@ -37,44 +38,64 @@ export const getAllBooks = catchAsyncErrors(async (req, res, next) => {
         books
     });
 });
-// 4. UPDATE BOOK (Admin Only)
-export const updateBook = catchAsyncErrors(async (req, res, next) => {
-    const { id } = req.params;
-
-    // 1. Check if the book actually exists first
-    const existingBook = await getBookByIdModel(id);
-    if (!existingBook) {
-        return next(new ErrorHandler(`Book not found with ID: ${id}`, 404));
-    }
-
-    // 2. Merge the old data with the new data from the request body
-    const updatedData = {
-        title: req.body.title || existingBook.title,
-        author: req.body.author || existingBook.author,
-        description: req.body.description || existingBook.description,
-        price: req.body.price || existingBook.price,
-        // Quantity can be 0, so we check if it's explicitly provided, otherwise keep old
-        quantity: req.body.quantity !== undefined ? req.body.quantity : existingBook.quantity
-    };
-
-    // 3. Save the updates to the database
-    await updateBookModel(id, updatedData);
-
-    res.status(200).json({
+// UPDATE BOOK
+// UPDATE BOOK
+export const updateBook = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { title, author, description, price, quantity } = req.body;
+  
+      const newQuantity = Number(quantity);
+      const newPrice = Number(price);
+  
+      // 1. Check if book exists
+      const [existingBooks] = await db.query("SELECT * FROM books WHERE id = ?", [id]);
+      
+      if (existingBooks.length === 0) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+  
+      // 2. Find out how many copies are currently in the hands of students
+      const [activeBorrows] = await db.query(
+        "SELECT COUNT(*) as borrowed_count FROM borrow_records WHERE book_id = ? AND return_date IS NULL",
+        [id]
+      );
+      const borrowedCount = activeBorrows[0].borrowed_count;
+  
+      // 3. Block update if admin tries to set total quantity lower than what is already borrowed
+      if (newQuantity < borrowedCount) {
+        return res.status(400).json({ 
+          message: `Cannot lower quantity to ${newQuantity}. There are currently ${borrowedCount} copies borrowed by students.` 
+        });
+      }
+  
+      // 4. Calculate if it should still be marked as "available" (true/false)
+      const isAvailable = newQuantity > borrowedCount;
+  
+      // 5. Update the database using your EXACT schema columns
+      await db.query(
+        "UPDATE books SET title=?, author=?, description=?, price=?, quantity=?, is_available=? WHERE id=?",
+        [title, author, description, newPrice, newQuantity, isAvailable, id] 
+      );
+  
+      res.status(200).json({
         success: true,
-        message: "Book updated successfully"
-    });
-});
+        message: "Book updated successfully!",
+      });
+  
+    } catch (error) {
+      console.log("🔥 BACKEND CRASH DETECTED 🔥");
+      console.log(error.message);
+      res.status(500).json({ message: "Backend error: " + error.message });
+    }
+  };
 export const deleteBook = catchAsyncErrors(async (req, res, next) => {
     const { id } = req.params;
 
     const affectedRows = await deleteBookModel(id);
-
-    // If affectedRows is 0, it means no book with that ID existed
     if (affectedRows === 0) {
         return next(new ErrorHandler(`Book not found with ID: ${id}`, 404));
     }
-
     res.status(200).json({
         success: true,
         message: "Book deleted successfully"

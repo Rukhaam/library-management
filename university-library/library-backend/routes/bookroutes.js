@@ -1,7 +1,6 @@
 import express from 'express';
 import { createBook, getAllBooks, deleteBook,updateBook } from '../controllers/bookcontrollers.js';
 import { isAuthenticated, isAuthorized } from '../middleware/authMiddleware.js'; // Fixed relative path!
-import { deleteBook } from "../controllers/bookcontrollers.js"; // add to your imports
 const router = express.Router(); // Changed to 'router' to match your routes below
 
 // POST /api/books/admin/add
@@ -17,5 +16,5 @@ router.delete("/delete/:id", isAuthenticated, isAuthorized("admin"), deleteBook)
 
 
 // Add this with your other routes:
-router.delete("/delete/:id", isAuthenticated, authorizeRoles("admin"), deleteBook);
+// router.delete("/delete/:id", isAuthenticated, authorizeRoles("admin"), deleteBook);
 export default router;

@@ -10,9 +10,8 @@ const bookSlice = createSlice({
     message: null,
   },
   reducers: {
-    // ==========================
+
     // FETCH ALL BOOKS
-    // ==========================
     fetchBooksRequest(state) {
       state.loading = true;
       state.error = null;
@@ -26,9 +25,7 @@ const bookSlice = createSlice({
       state.error = action.payload;
     },
 
-    // ==========================
     // ADD NEW BOOK
-    // ==========================
     addBookRequest(state) {
       state.loading = true;
       state.error = null;
@@ -43,6 +40,20 @@ const bookSlice = createSlice({
       state.error = action.payload;
     },
 
+    //========
+    //update book
+    updateBookRequest(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    updateBookSuccess(state, action) {
+      state.loading = false;
+      state.message = action.payload.message;
+    },
+    updateBookFailed(state, action) {
+      state.loading = false;
+      state.error = action.payload;
+    },
     // ==========================
     // DELETE BOOK
     // ==========================
@@ -60,9 +71,7 @@ const bookSlice = createSlice({
       state.error = action.payload;
     },
 
-    // ==========================
     // RESET UTILITY
-    // ==========================
     resetBookSlice(state) {
       state.error = null;
       state.message = null;
@@ -81,14 +90,14 @@ export const {
   deleteBookRequest,
   deleteBookSuccess,
   deleteBookFailed,
+  updateBookRequest,
+  updateBookSuccess,
+  updateBookFailed,
   resetBookSlice: resetBookSliceAction,
 } = bookSlice.actions;
 
 export default bookSlice.reducer;
-
-// ==========================================
 // THUNKS (Async Actions)
-// ==========================================
 
 export const resetBookSlice = () => (dispatch) => {
   dispatch(resetBookSliceAction());
@@ -107,7 +116,7 @@ export const fetchAllBooks = () => async (dispatch) => {
   }
 };
 
-// 2. Add New Book (Supports image upload via FormData)
+// 2. Add New Book 
 export const addNewBook = (data) => async (dispatch) => {
     try {
       dispatch(addBookRequest());
@@ -137,5 +146,17 @@ export const deleteBook = (bookId) => async (dispatch) => {
     dispatch(fetchAllBooks()); // Refresh the library instantly
   } catch (err) {
     dispatch(deleteBookFailed(err.response?.data?.message || "Failed to delete book"));
+  }
+};
+export const updateBook = (id, bookData) => async (dispatch) => {
+  try {
+    dispatch(updateBookRequest());
+    const res = await axios.put(`http://localhost:5000/api/books/admin/update/${id}`, bookData, {
+      withCredentials: true,
+    });
+    dispatch(updateBookSuccess(res.data));
+    dispatch(fetchAllBooks()); 
+  } catch (err) {
+    dispatch(updateBookFailed(err.response?.data?.message || "Failed to update book"));
   }
 };

@@ -3,8 +3,6 @@ import db from '../config/db.js';
 // Add a new book to the database
 export const createBookModel = async (bookData) => {
     const { title, author, description, price, quantity } = bookData;
-    
-    // Automatically set is_available to false if quantity is 0
     const is_available = quantity > 0; 
 
     const [result] = await db.query(

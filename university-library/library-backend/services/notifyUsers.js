@@ -1,9 +1,9 @@
 import cron from 'node-cron';
 import db from '../config/db.js';
-// import { sendEmail } from '../utils/sendEmail.js'; 
+import { sendEmail } from '../utils/sendEmail.js'; 
+import { generateBookReminderTemplate } from '../utils/emailTemplates.js'; // 👈 Import here
 
 export const startNotificationJob = () => {
-    // Run every day at 8:00 AM
     cron.schedule('0 8 * * *', async () => {
         try {
             console.log('📧 [CRON] Checking for due/overdue books...');
@@ -17,18 +17,35 @@ export const startNotificationJob = () => {
                 AND (DATE(br.due_date) = CURDATE() + INTERVAL 1 DAY OR DATE(br.due_date) < CURDATE())
             `);
 
-            if (rows.length === 0) return; // Exit quietly if nothing to do
+            if (rows.length === 0) return;
 
             for (const record of rows) {
                 const isOverdue = new Date() > new Date(record.due_date);
-                console.log(`-> Sending ${isOverdue ? 'overdue' : 'reminder'} email to: ${record.email}`);
                 
-                // await sendEmail({ ... });
+                // 📝 Generate HTML using the template
+                const htmlMessage = generateBookReminderTemplate(
+                    record.name, 
+                    record.title, 
+                    record.due_date, 
+                    isOverdue
+                );
+
+                const subject = isOverdue 
+                    ? `🚨 Overdue Notice: ${record.title}` 
+                    : `📅 Library Reminder: ${record.title} is due tomorrow`;
+
+                console.log(`-> Notifying: ${record.email} (${isOverdue ? 'Overdue' : 'Reminder'})`);
+                
+                await sendEmail({
+                    email: record.email,
+                    subject: subject,
+                    html: htmlMessage,
+                });
             }
-            console.log(`✅ [CRON] Successfully processed ${rows.length} email reminders.`);
+            console.log(`✅ [CRON] Processed ${rows.length} notifications.`);
             
         } catch (error) {
-            console.error('❌ [CRON] Error during email notifications:', error.message);
+            console.error('❌ [CRON] Error:', error.message);
         }
     });
 };

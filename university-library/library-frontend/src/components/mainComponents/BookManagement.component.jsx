@@ -9,7 +9,8 @@ import {
 } from "@/store/slices/popupSlice";
 import { toast } from "react-toastify";
 import Header from "../../layout/Header";
-
+import { toggleEditBookPopup } from "@/store/slices/popupSlice"; 
+import EditBookPopup from "../../popups/updateBookPopup"; 
 // Popups
 import AddBookPopup from "../../popups/AddBookPopup";
 import ReadBookPopup from "../../popups/ReadBookPopup";
@@ -17,7 +18,7 @@ import RecordBookPopup from "../../popups/RecordBookPopup";
 import { toggleDeleteBookPopup } from "@/store/slices/popupSlice";
 import DeleteBookPopup from "@/popups/deleteBookPopup";
 // Icons
-import { BookOpen, NotebookPen ,Trash2} from "lucide-react"; 
+import { BookOpen, NotebookPen ,Trash2,Pencil} from "lucide-react"; 
 
 const BookManagement = () => {
   const dispatch = useDispatch();
@@ -46,7 +47,7 @@ const BookManagement = () => {
   } = useSelector((state) => state.borrow);
 
   // 4. Grab Popup States
-  const { addBookPopup, readBookPopup, recordBookPopup,deleteBookPopup } = useSelector(
+  const { addBookPopup, readBookPopup, recordBookPopup,deleteBookPopup ,editBookPopup} = useSelector(
     (state) => state.popup
   );
 
@@ -219,6 +220,13 @@ const BookManagement = () => {
                           >
                             <NotebookPen size={20} />
                           </button>
+                          <button
+                            onClick={() => dispatch(toggleEditBookPopup(book))}
+                            className="text-blue-500 hover:text-blue-700 transition"
+                            title="Edit Book"
+                          >
+                            <Pencil size={20} />
+                          </button>
                           
                           {/* NEW DELETE BUTTON */}
                           <button
@@ -275,6 +283,7 @@ const BookManagement = () => {
       {readBookPopup && <ReadBookPopup readBook={readBook} />}           
       {recordBookPopup && <RecordBookPopup borrowBookId={borrowBookId} />}
       {deleteBookPopup && <DeleteBookPopup />}
+      {editBookPopup && <EditBookPopup />}
     </main>
   );
 };
