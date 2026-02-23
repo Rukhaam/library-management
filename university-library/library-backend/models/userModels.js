@@ -28,8 +28,6 @@ export const deleteUnverifiedUser = async (email) => {
 };
 
 export const generateVerificationCode = () => {
-  // crypto.randomInt(min, max) generates a cryptographically secure 
-  // random integer between min (inclusive) and max (exclusive).
   return crypto.randomInt(100000, 1000000).toString();
 };
 export const generateToken = (user) => {
@@ -40,10 +38,7 @@ export const generateToken = (user) => {
   );
 };
 export const getResetPasswordToken = () => {
-  // Generate a random 20-character hex string
   const resetToken = crypto.randomBytes(20).toString("hex");
-
-  // Hash the token using SHA-256 to store it securely in the database
   const hashedToken = crypto
     .createHash("sha256")
     .update(resetToken)
@@ -58,7 +53,6 @@ export const updateResetPasswordToken = async (email, hashedToken, expireTime) =
   );
 };
 export const findUserByResetToken = async (hashedToken) => {
-  // Removed the NOW() check from SQL
   const [rows] = await db.query(
       "SELECT * FROM users WHERE reset_password_token = ?",
       [hashedToken]
@@ -72,31 +66,30 @@ export const updatePassword = async (userId, hashedPassword) => {
   );
 };
 export const getAllUsersModel = async () => {
-  const [rows] = await db.query(
-      `SELECT 
-          u.id, 
-          u.name, 
-          u.email, 
-          u.phone, 
-          u.role, 
-          u.avatar_url, 
-          u.created_at AS createdAt,
-          COUNT(br.id) AS borrowedBooksCount 
-       FROM users u 
-       LEFT JOIN borrow_records br ON u.id = br.user_id AND br.return_date IS NULL 
-       GROUP BY u.id 
-       ORDER BY u.created_at DESC`
-  );
+  // We use LEFT JOIN so even users with 0 borrows still show up in the list!
+  const query = `
+    SELECT 
+      u.id, 
+      u.name, 
+      u.email, 
+      u.role, 
+      u.created_at,
+      COALESCE(SUM(br.fine), 0) AS total_unpaid_fines
+    FROM users u
+    LEFT JOIN borrow_records br 
+      ON u.id = br.user_id AND br.fine_status = 'Unpaid'
+    GROUP BY u.id
+    ORDER BY u.created_at DESC;
+  `;
+  
+  const [rows] = await db.query(query);
   return rows;
 };
 
-// Check if email exists (reusable)
 export const checkEmailExists = async (email) => {
   const [rows] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
   return rows.length > 0;
 };
-
-// Register a new admin
 export const registerAdminModel = async (adminData) => {
   const { name, email, phone, hashedPassword, avatar_url } = adminData;
   

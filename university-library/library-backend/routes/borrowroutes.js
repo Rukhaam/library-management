@@ -3,7 +3,8 @@ import {
     borrowBook, 
     getMyBorrowedBooks, 
     getBorrowedBooksForAdmin, 
-    returnBorrowedBooks 
+    returnBorrowedBooks ,
+    settleUserFines
 } from '../controllers/borrowcontrollers.js';
 import { isAuthenticated, isAuthorized } from '../middleware/authMiddleware.js';
 
@@ -18,7 +19,7 @@ router.get('/my-books', isAuthenticated, getMyBorrowedBooks);
 
 // 3. Return a book: PUT /api/borrow/return/:bookId
 router.put('/return/:bookId', isAuthenticated, returnBorrowedBooks);
-
+router.put("/admin/users/:id/pay-fines", isAuthenticated, isAuthorized("admin"), settleUserFines);
 
 // =========ADMIN ROUTES===============
 // 4. See all library borrow records: GET /api/borrow/admin/all

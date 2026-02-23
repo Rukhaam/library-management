@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchAllUsers, resetUserSlice, promoteToAdmin } from "@/store/slices/userSlice";
+// 👇 IMPORT THE NEW THUNK HERE
+import { fetchAllUsers, resetUserSlice, promoteToAdmin } from "@/store/slices/userSlice"; 
 import { toast } from "react-toastify";
 import { ShieldCheck } from "lucide-react";
 import Header from "../../layout/Header";
+import { settleUserFines } from "@/store/slices/borrowSlice";
 
 const Users = () => {
   const dispatch = useDispatch();
@@ -90,6 +92,8 @@ const Users = () => {
                     <th className="py-4 px-6 font-bold">Email Address</th>
                     <th className="py-4 px-6 font-bold text-center">Role</th>
                     <th className="py-4 px-6 font-bold text-center">Books Borrowed</th>
+                    {/* 👇 NEW HEADER FOR FINES */}
+                    <th className="py-4 px-6 font-bold text-center">Pending Fines</th>
                     <th className="py-4 px-6 font-bold text-right">Registered On</th>
                     <th className="py-4 px-6 font-bold text-center">Actions</th>
                   </tr>
@@ -120,6 +124,29 @@ const Users = () => {
                       <td className="py-4 px-6 text-center font-bold text-brand-primary">
                         {user.borrowedBooksCount || 0}
                       </td>
+
+                      {/* 👇 NEW TABLE DATA FOR FINES & COLLECT BUTTON */}
+                      <td className="py-4 px-6 text-center">
+                        {Number(user.total_unpaid_fines) > 0 ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="bg-red-100 text-red-600 px-2 py-1 rounded-md font-bold text-xs">
+                              ₹{user.total_unpaid_fines}
+                            </span>
+                            <button 
+                              onClick={() => dispatch(settleUserFines(user.id))}
+                              className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded shadow-sm text-xs font-bold transition-all"
+                              title="Mark fine as paid"
+                            >
+                              💰 Collect
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md font-medium text-xs">
+                            ✅ No Dues
+                          </span>
+                        )}
+                      </td>
+
                       <td className="py-4 px-6 text-right text-sm text-gray-500">
                         {formatDateTime(user.createdAt || user.created_at)}
                       </td>

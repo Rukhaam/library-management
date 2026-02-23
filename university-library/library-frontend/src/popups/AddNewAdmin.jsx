@@ -15,7 +15,7 @@ const AddNewAdmin = () => {
   const [password, setPassword] = useState("");
   
   // Avatar States
-  const [avatar, setAvatar] = useState(null);
+  const [avatar, setAvatar] = useState(""); // 👈 Changed to empty string
   const [avatarPreview, setAvatarPreview] = useState("");
 
   // Redux State
@@ -35,16 +35,15 @@ const AddNewAdmin = () => {
     }
   }, [error, message, dispatch]);
 
-  // Handle Image Selection and Preview
+  // Handle Image Selection and Convert to Base64
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAvatar(file);
-      
-      // Read the file to generate a preview URL
+      // Read the file as a Base64 string for Cloudinary
       const reader = new FileReader();
       reader.onload = () => {
         setAvatarPreview(reader.result);
+        setAvatar(reader.result); // 👈 Save the Base64 string directly
       };
       reader.readAsDataURL(file);
     }
@@ -54,18 +53,16 @@ const AddNewAdmin = () => {
   const handleAddNewAdmin = (e) => {
     e.preventDefault();
 
-    // We MUST use FormData because we are sending a File (Avatar)
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("phone", phone);
-    formData.append("password", password);
-    
-    if (avatar) {
-      formData.append("avatar", avatar);
-    }
+    // 👈 Create a standard JavaScript object instead of FormData
+    const adminData = {
+      name,
+      email,
+      phone,
+      password,
+      avatar // This is now a Base64 string or empty string
+    };
 
-    dispatch(addNewAdmin(formData));
+    dispatch(addNewAdmin(adminData));
   };
 
   return (

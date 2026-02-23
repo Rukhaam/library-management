@@ -6,27 +6,21 @@ export const checkActiveBorrow = async (userId, bookId) => {
     );
     return rows[0];
 };
-
-// 2. Get active borrows for a specific user (For "My Books" page)
-// 2. Get active borrows for a specific user (For "My Books" page)
 export const getUserActiveBorrowsModel = async (userId) => {
     const [rows] = await db.query(
-        // 👇 Removed "AND br.return_date IS NULL" and added "b.description" so the popup works!
         'SELECT b.title, b.author, b.description, br.* FROM borrow_records br JOIN books b ON br.book_id = b.id WHERE br.user_id = ? ORDER BY br.borrow_date DESC',
         [userId]
     );
     return rows;
 };
 
-
 export const getAllBorrowRecordsModel = async () => {
     const [rows] = await db.query(
-        'SELECT u.name as user_name, u.email as user_email, b.title as book_title, br.* FROM borrow_records br JOIN users u ON br.user_id = u.id JOIN books b ON br.book_id = b.id ORDER BY br.borrow_date DESC'
+        'SELECT u.name as user_name, u.email as user_email, b.title as book_title, br.* FROM borrow_records br JOIN users u ON br.user_id = u.id JOIN books b ON br.book_id = b.id WHERE br.return_date IS NULL ORDER BY br.borrow_date DESC'
     );
     return rows;
 };
 
-// 4. Return a book model
 export const returnBookModel = async (recordId, bookId, currentQuantity, fine) => {
     // Mark as returned
     await db.query(
@@ -41,7 +35,6 @@ export const returnBookModel = async (recordId, bookId, currentQuantity, fine) =
     );
 };
 
-// 5. Borrow book model (From earlier step)
 export const borrowBookModel = async (userId, bookId, currentQuantity, dueDate) => {
     const newQuantity = currentQuantity - 1;
     const is_available = newQuantity > 0;
@@ -56,3 +49,10 @@ export const borrowBookModel = async (userId, bookId, currentQuantity, dueDate) 
         [newQuantity, is_available, bookId]
     );
 };
+export const settleUserFinesModel = async (userId) => {
+    const [result] = await db.query(
+      "UPDATE borrow_records SET fine_status = 'Paid' WHERE user_id = ? AND fine_status = 'Unpaid' AND fine > 0",
+      [userId]
+    );
+    return result;
+  };

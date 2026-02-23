@@ -88,15 +88,15 @@ export const fetchAllUsers = () => async (dispatch) => {
 };
 
 // 2. Add New Admin
+// 2. Add New Admin
 export const addNewAdmin = (data) => async (dispatch) => {
   try {
     dispatch(addNewAdminRequest());
     
-    // ⚠️ CRITICAL: Notice the Content-Type! 
-    // Because we are uploading an Avatar image file, it MUST be multipart/form-data
+    // 👇 Changed to application/json
     const res = await axios.post("http://localhost:5000/api/users/admin/new", data, {
       withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { "Content-Type": "application/json" },
     });
     
     dispatch(addNewAdminSuccess(res.data));

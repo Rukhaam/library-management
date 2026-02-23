@@ -162,3 +162,20 @@ export const returnBook = ({ bookId, email }) => async (dispatch) => {
     dispatch(returnBookFailed(err.response?.data?.message || "Failed to return book"));
   }
 };
+// SETTLE USER FINES
+export const settleUserFines = (userId) => async (dispatch) => {
+  try {
+    // Note: Make sure this URL matches exactly what you set in your backend routes!
+    const res = await axios.put(`http://localhost:5000/api/borrow/admin/users/${userId}/pay-fines`, {}, {
+      withCredentials: true,
+    });
+    
+    // You can use a success toast here if you have a message slice!
+    console.log(res.data.message); 
+    
+    // ♻️ REFETCH THE USERS LIST so the fine instantly drops to $0 on the screen
+    dispatch(getAllUsers()); 
+  } catch (err) {
+    console.error(err.response?.data?.message || "Failed to settle fines");
+  }
+};

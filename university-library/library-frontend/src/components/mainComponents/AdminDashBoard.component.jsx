@@ -5,7 +5,7 @@ import { fetchAllBorrowedBooks } from "@/store/slices/borrowSlice";
 import { fetchAllUsers } from "@/store/slices/userSlice";
 import Header from "../../layout/Header";
 import { BookOpen, Users, AlertCircle, BookmarkCheck } from "lucide-react";
-
+import { settleUserFines } from "../../store/slices/borrowSlice"; // Adjust path as needed
 // Chart.js Imports
 import {
   Chart as ChartJS,
@@ -109,7 +109,6 @@ const AdminDashboard = () => {
     },
   };
 
-  // Get the 5 most recent borrows for the activity list
   const recentActivity = safeBorrows.slice(0, 5);
 
   return (

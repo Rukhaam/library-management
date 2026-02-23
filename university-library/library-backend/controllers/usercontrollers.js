@@ -32,7 +32,8 @@ export const promoteUserToAdmin = async (req, res) => {
 // 2. REGISTER NEW ADMIN
 // 2. REGISTER NEW ADMIN
 export const registerNewAdmin = catchAsyncErrors(async (req, res, next) => {
-    const { name, email, phone, password } = req.body;
+    // 👇 Added 'avatar' to the destructured req.body
+    const { name, email, phone, password, avatar } = req.body;
 
     // Validate text fields
     if (!name || !email || !password) {
@@ -47,18 +48,12 @@ export const registerNewAdmin = catchAsyncErrors(async (req, res, next) => {
 
     let avatar_url = null;
 
-    if (req.files && req.files.avatar) {
-        const { avatar } = req.files;
-        const allowedFormats = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-        
-        // Check format
-        if(!allowedFormats.includes(avatar.mimetype)){
-             return next(new ErrorHandler("File format not supported. Please upload a PNG, JPG, or WEBP.", 400));
-        }
-
-        // Upload to Cloudinary
-        const cloudinaryResponse = await cloudinary.uploader.upload(avatar.tempFilePath, {
+    // 👇 Cloudinary can upload Base64 strings directly!
+    if (avatar) {
+        const cloudinaryResponse = await cloudinary.uploader.upload(avatar, {
             folder: "library_avatars_admins", 
+            width: 150,
+            crop: "scale"
         });
         
         if(!cloudinaryResponse || cloudinaryResponse.error) {

@@ -3,7 +3,7 @@ import db from '../config/db.js';
 
 export const startAccountCleanupJob = () => {
     // Run every day at exactly midnight
-    cron.schedule('0 0 * * *', async () => {
+    cron.schedule('0 8 * * *', async () => {
         try {
             console.log('🧹 [CRON] Running unverified accounts cleanup job...');
             

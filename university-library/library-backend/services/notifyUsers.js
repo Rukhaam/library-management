@@ -4,7 +4,7 @@ import { sendEmail } from '../utils/sendEmail.js';
 import { generateBookReminderTemplate } from '../utils/emailTemplates.js'; // 👈 Import here
 
 export const startNotificationJob = () => {
-    cron.schedule('0 8 * * *', async () => {
+    cron.schedule('* * * * *', async () => {
         try {
             console.log('📧 [CRON] Checking for due/overdue books...');
             
