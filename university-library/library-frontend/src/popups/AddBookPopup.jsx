@@ -23,11 +23,10 @@ const AddBookPopup = () => {
       author,
       price,
       quantity,
-      description
+      description,
     };
 
     dispatch(addNewBook(data));
-    // Keep the rest the same...
   };
 
   return (
@@ -47,7 +46,9 @@ const AddBookPopup = () => {
         {/* Form */}
         <form onSubmit={handleAddBook} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Book Title</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Book Title
+            </label>
             <input
               type="text"
               required
@@ -59,7 +60,9 @@ const AddBookPopup = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Author</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Author
+            </label>
             <input
               type="text"
               required
@@ -72,7 +75,9 @@ const AddBookPopup = () => {
 
           <div className="flex gap-4">
             <div className="w-1/2">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Price ($)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Price ($)
+              </label>
               <input
                 type="number"
                 required
@@ -83,12 +88,16 @@ const AddBookPopup = () => {
               />
             </div>
             <div className="w-1/2">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Quantity</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Quantity
+              </label>
               <input
                 type="number"
                 required
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                value={quantity< 0 ? 0 : quantity}
+                onChange={(e) => setQuantity(
+                    e.target.value 
+                )}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                 placeholder="10"
               />
@@ -96,7 +105,9 @@ const AddBookPopup = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Description
+            </label>
             <textarea
               required
               rows="3"
@@ -119,7 +130,9 @@ const AddBookPopup = () => {
               type="submit"
               disabled={loading}
               className={`px-6 py-2 text-sm font-bold text-white rounded-lg flex items-center gap-2 ${
-                loading ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-800"
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-black hover:bg-gray-800"
               }`}
             >
               <Save size={16} />

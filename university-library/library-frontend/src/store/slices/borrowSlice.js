@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-
+import { fetchAllUsers } from "./userSlice";
 const borrowSlice = createSlice({
   name: "borrow",
   initialState: {
@@ -11,9 +11,7 @@ const borrowSlice = createSlice({
     message: null,
   },
   reducers: {
-    // ==========================
     // FETCH BORROWED BOOKS
-    // ==========================
     fetchBorrowedRequest(state) {
       state.loading = true;
       state.error = null;
@@ -30,9 +28,7 @@ const borrowSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    // ==========================
     // BORROW A BOOK
-    // ==========================
     borrowBookRequest(state) {
       state.loading = true;
       state.error = null;
@@ -92,9 +88,7 @@ export const {
 
 export default borrowSlice.reducer;
 
-// ==========================================
 // THUNKS (Async Actions)
-// ==========================================
 
 export const resetBorrowSlice = () => (dispatch) => {
   dispatch(resetBorrowSliceAction());
@@ -127,12 +121,10 @@ export const fetchAllBorrowedBooks = () => async (dispatch) => {
 };
 
 // 3. Borrow a Book
-// Change the parameter to accept an object containing bookId and email
 export const borrowBook = ({ bookId, email }) => async (dispatch) => {
     try {
-      dispatch(borrowBookRequest()); // Or whatever your request action is named
+      dispatch(borrowBookRequest()); 
       
-      // 👈 Pass { email } as the second argument (the request body)
       const res = await axios.post(`http://localhost:5000/api/borrow/add/${bookId}`, { email }, {
         withCredentials: true,
         headers: { "Content-Type": "application/json" }
@@ -145,19 +137,17 @@ export const borrowBook = ({ bookId, email }) => async (dispatch) => {
     }
   };
 // 4. Return a Book
-// 4. Return a Book
 export const returnBook = ({ bookId, email }) => async (dispatch) => {
   try {
     dispatch(returnBookRequest());
     
-    // ✅ Notice we are now passing { email } as the request body
     const res = await axios.put(`http://localhost:5000/api/borrow/return/${bookId}`, { email }, {
       withCredentials: true,
     });
     
     dispatch(returnBookSuccess(res.data));
-    dispatch(fetchMyBorrowedBooks()); // Refresh their list
-    dispatch(fetchAllBorrowedBooks()); // Refresh catalog for admins
+    dispatch(fetchMyBorrowedBooks()); 
+    dispatch(fetchAllBorrowedBooks()); 
   } catch (err) {
     dispatch(returnBookFailed(err.response?.data?.message || "Failed to return book"));
   }
@@ -165,17 +155,16 @@ export const returnBook = ({ bookId, email }) => async (dispatch) => {
 // SETTLE USER FINES
 export const settleUserFines = (userId) => async (dispatch) => {
   try {
-    // Note: Make sure this URL matches exactly what you set in your backend routes!
+    dispatch(borrowBookRequest()); 
+    
     const res = await axios.put(`http://localhost:5000/api/borrow/admin/users/${userId}/pay-fines`, {}, {
       withCredentials: true,
     });
     
-    // You can use a success toast here if you have a message slice!
-    console.log(res.data.message); 
+    dispatch(borrowBookSuccess({ message: "Fine collected successfully! 💸" },res));
     
-    // ♻️ REFETCH THE USERS LIST so the fine instantly drops to $0 on the screen
-    dispatch(getAllUsers()); 
+    dispatch(fetchAllUsers()); 
   } catch (err) {
-    console.error(err.response?.data?.message || "Failed to settle fines");
+    dispatch(borrowBookFailed(err.response?.data?.message || "Failed to settle fines"));
   }
 };

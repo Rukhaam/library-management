@@ -15,7 +15,7 @@ const AddNewAdmin = () => {
   const [password, setPassword] = useState("");
   
   // Avatar States
-  const [avatar, setAvatar] = useState(""); // 👈 Changed to empty string
+  const [avatar, setAvatar] = useState(""); 
   const [avatarPreview, setAvatarPreview] = useState("");
 
   // Redux State
@@ -30,36 +30,31 @@ const AddNewAdmin = () => {
     if (message) {
       toast.success(message);
       dispatch(resetUserSlice());
-      dispatch(fetchAllUsers()); // Refresh the users table to show the new admin!
-      dispatch(toggleAddNewAdminPopup()); // Close the popup
+      dispatch(fetchAllUsers());
+      dispatch(toggleAddNewAdminPopup()); 
     }
   }, [error, message, dispatch]);
-
-  // Handle Image Selection and Convert to Base64
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Read the file as a Base64 string for Cloudinary
       const reader = new FileReader();
       reader.onload = () => {
         setAvatarPreview(reader.result);
-        setAvatar(reader.result); // 👈 Save the Base64 string directly
+        setAvatar(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Handle Form Submission
   const handleAddNewAdmin = (e) => {
     e.preventDefault();
 
-    // 👈 Create a standard JavaScript object instead of FormData
     const adminData = {
       name,
       email,
       phone,
       password,
-      avatar // This is now a Base64 string or empty string
+      avatar 
     };
 
     dispatch(addNewAdmin(adminData));

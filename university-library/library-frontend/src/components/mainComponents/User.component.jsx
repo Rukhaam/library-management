@@ -6,13 +6,16 @@ import { toast } from "react-toastify";
 import { ShieldCheck } from "lucide-react";
 import Header from "../../layout/Header";
 import { settleUserFines } from "@/store/slices/borrowSlice";
-
+import { resetBorrowSlice } from "@/store/slices/borrowSlice";
 const Users = () => {
   const dispatch = useDispatch();
 
   // Grab users and status from the Redux store
   const { users, loading, error, message } = useSelector(
     (state) => state.user
+  );
+  const { error: borrowError, message: borrowMessage } = useSelector(
+    (state) => state.borrow
   );
 
   // PAGINATION STATE
@@ -41,7 +44,15 @@ const Users = () => {
       toast.success(message);
       dispatch(resetUserSlice());
     }
-  }, [error, message, dispatch]);
+    if (borrowError) {
+      toast.error(borrowError);
+      dispatch(resetBorrowSlice());
+    }
+    if (borrowMessage) {
+      toast.success(borrowMessage);
+      dispatch(resetBorrowSlice());
+    }
+  }, [error, message, borrowError, borrowMessage,dispatch]);
 
   // ==========================================
   // 🕒 CUSTOM DATE FORMATTER (WITH SAFETY CHECK)

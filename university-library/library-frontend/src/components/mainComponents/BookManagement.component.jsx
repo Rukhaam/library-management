@@ -131,9 +131,12 @@ const BookManagement = () => {
               onClick={() => dispatch(toggleAddBookPopup())}
               className="relative w-full sm:w-52 flex items-center justify-center gap-4 py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-semibold"
             >
-              <span className="w-6 h-6 flex items-center justify-center bg-white text-black rounded-full absolute left-5 text-xl font-bold">
+              <div className="flex items-center text-center justify-center">
+              <span className="w-6 h-7  bg-white text-black rounded-full absolute left-5 text-xl font-bold">
                 +
               </span>
+              </div>
+            
               Add Book
             </button>
           )}

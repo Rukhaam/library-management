@@ -10,18 +10,6 @@ const authSlice = createSlice({
     user: null,
     isAuthenticated: false,
   },
-// initialState: {
-//     loading: false,
-//     error: null,
-//     message: null,
-//     // 👇 Temporarily hardcode a user to test the UI!
-//     user: { 
-//        name: "Test Admin", 
-//        role: "admin", // Change this to "user" to see the other menu!
-//        avatar: { url: "" } 
-//     },
-//     isAuthenticated: true, // 👇 Temporarily set to true
-//   },
   reducers: {
     registerRequest(state) {
       state.loading = true;
@@ -145,7 +133,7 @@ const authSlice = createSlice({
     updateAvatarSuccess(state, action) {
       state.loading = false;
       state.message = action.payload.message;
-      state.user = action.payload.user; // Instantly updates the UI with the new avatar!
+      state.user = action.payload.user; 
     },
     updateAvatarFailed(state, action) {
       state.loading = false;
@@ -160,7 +148,6 @@ const authSlice = createSlice({
   },
 });
 
-// Exporting actions destructured makes the thunks below much cleaner to read
 export const {
   registerRequest, registerSuccess, registerFailed,
   otpVerificationRequest, otpVerificationSuccess, otpVerificationFailed,
@@ -176,9 +163,7 @@ export const {
 
 export default authSlice.reducer;
 
-// ==========================================
-// THUNKS (Using clean try/catch)
-// ==========================================
+// THUNKS (
 
 export const resetAuthSlice = () => (dispatch) => {
   dispatch(resetAuthSliceAction());
